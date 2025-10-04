@@ -18,6 +18,7 @@ import yaml
 from datetime import datetime
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
+from logging.handlers import RotatingFileHandler
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +41,9 @@ class PaymentGatewayProxy:
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
         self.running = True
 
+        # HTTP session for gateway requests (reusable, with connection pooling)
+        self.http_session: Optional[aiohttp.ClientSession] = None
+
         # Load routing configuration
         self.routing_config = self._load_routing_config(routing_config_path)
 
@@ -48,15 +52,29 @@ class PaymentGatewayProxy:
         self.reconnect_max_delay = 60  # Max 60 seconds
         self.reconnect_multiplier = 2
 
-        # Setup logging
+        # Setup logging with rotation (10MB max, 3 backups)
         log_file = f"proxy_{datetime.now().strftime('%Y%m%d')}.log"
+
+        # Rotating file handler - prevents disk overflow
+        file_handler = RotatingFileHandler(
+            log_file,
+            maxBytes=10 * 1024 * 1024,  # 10MB
+            backupCount=3
+        )
+        file_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        )
+
+        # Console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(
+            logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        )
+
+        # Configure root logger
         logging.basicConfig(
             level=getattr(logging, log_level.upper()),
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_file),
-                logging.StreamHandler(sys.stdout)
-            ]
+            handlers=[file_handler, console_handler]
         )
         self.logger = logging.getLogger(__name__)
 
@@ -129,6 +147,17 @@ class PaymentGatewayProxy:
         # No route found
         return None
 
+    async def _ensure_http_session(self):
+        """Ensure HTTP session exists with connection pooling"""
+        if self.http_session is None or self.http_session.closed:
+            # Create connector with connection pooling
+            connector = aiohttp.TCPConnector(
+                limit=10,           # Max 10 connections total
+                limit_per_host=5,   # Max 5 per gateway
+                ttl_dns_cache=300   # Cache DNS for 5 minutes
+            )
+            self.http_session = aiohttp.ClientSession(connector=connector)
+
     async def send_to_gateway(
         self,
         message_data: Dict[str, Any],
@@ -150,28 +179,30 @@ class PaymentGatewayProxy:
             self.logger.info(f"➡️  Forwarding to gateway: {gateway_url}")
             self.logger.info(f"   Payload: {json.dumps(message_data, ensure_ascii=False)}")
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    gateway_url,
-                    json=message_data,
-                    headers={'Content-Type': 'application/json'},
-                    timeout=aiohttp.ClientTimeout(total=gateway_timeout)
-                ) as response:
+            # Ensure session exists
+            await self._ensure_http_session()
 
-                    if response.status == 200:
-                        result = await response.json()
-                        self.logger.info(f"✅ Gateway response: HTTP {response.status}")
-                        self.logger.info(f"   Response: {json.dumps(result, ensure_ascii=False)}")
-                        return result
-                    else:
-                        error_text = await response.text()
-                        self.logger.error(f"❌ Gateway error: HTTP {response.status}")
-                        self.logger.error(f"   Error: {error_text}")
-                        return {
-                            'status': 'error',
-                            'error': 'http_error',
-                            'message': f"HTTP {response.status}: {error_text}"
-                        }
+            async with self.http_session.post(
+                gateway_url,
+                json=message_data,
+                headers={'Content-Type': 'application/json'},
+                timeout=aiohttp.ClientTimeout(total=gateway_timeout)
+            ) as response:
+
+                if response.status == 200:
+                    result = await response.json()
+                    self.logger.info(f"✅ Gateway response: HTTP {response.status}")
+                    self.logger.info(f"   Response: {json.dumps(result, ensure_ascii=False)}")
+                    return result
+                else:
+                    error_text = await response.text()
+                    self.logger.error(f"❌ Gateway error: HTTP {response.status}")
+                    self.logger.error(f"   Error: {error_text}")
+                    return {
+                        'status': 'error',
+                        'error': 'http_error',
+                        'message': f"HTTP {response.status}: {error_text}"
+                    }
 
         except asyncio.TimeoutError:
             self.logger.error(f"⏱️ Gateway timeout after {gateway_timeout}s")
@@ -295,6 +326,18 @@ class PaymentGatewayProxy:
         except Exception as e:
             self.logger.error(f"❌ Error handling message: {type(e).__name__}: {e}")
             self.stats['errors'] += 1
+            # Always send error response to server
+            error_response = {
+                'status': 'error',
+                'error': 'processing_error',
+                'message': f'Failed to process message: {str(e)}'
+            }
+            try:
+                if self.websocket and not self.websocket.closed:
+                    await self.websocket.send(json.dumps(error_response))
+                    self.stats['messages_sent'] += 1
+            except Exception as send_error:
+                self.logger.error(f"❌ Failed to send error response: {send_error}")
 
     async def receive_messages(self):
         """Receive and process messages from WS server"""
@@ -368,8 +411,18 @@ class PaymentGatewayProxy:
                     await asyncio.sleep(self.reconnect_delay)
 
         # Cleanup
-        if self.websocket:
-            await self.websocket.close()
+        if self.websocket and not self.websocket.closed:
+            try:
+                await self.websocket.close()
+            except Exception as e:
+                self.logger.error(f"Error closing websocket: {e}")
+
+        # Close HTTP session
+        if self.http_session and not self.http_session.closed:
+            try:
+                await self.http_session.close()
+            except Exception as e:
+                self.logger.error(f"Error closing HTTP session: {e}")
 
         self.print_stats()
         self.logger.info("👋 Payment Gateway Proxy stopped")
