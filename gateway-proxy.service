@@ -1,0 +1,34 @@
+[Unit]
+Description=Payment Gateway WebSocket Proxy Client
+Documentation=https://github.com/yourrepo/gateway_proxy_v2
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kiosk
+Group=kiosk
+WorkingDirectory=/opt/gateway_proxy_v2
+Environment="PATH=/opt/gateway_proxy_v2/venv/bin:/usr/bin:/bin"
+EnvironmentFile=/opt/gateway_proxy_v2/.env
+ExecStart=/opt/gateway_proxy_v2/venv/bin/python /opt/gateway_proxy_v2/proxy.py
+
+# Restart policy - always restart on failure
+Restart=always
+RestartSec=10
+
+# Limit restart rate - max 5 restarts in 200 seconds
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging - goes to systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gateway-proxy
+
+[Install]
+WantedBy=multi-user.target
