@@ -1,0 +1,107 @@
+2025-10-02 01:28:26,552 - __main__ - INFO - 🚀 Payment Gateway Proxy starting...
+2025-10-02 01:28:26,553 - __main__ - INFO -    Kiosk ID: kiosk_001
+2025-10-02 01:28:26,553 - __main__ - INFO -    Cloud URL: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:28:26,553 - __main__ - INFO -    Local Gateway: http://localhost:8080
+2025-10-02 01:28:26,553 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:28:36,614 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:28:36,619 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:28:36,621 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:28:41,628 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:28:51,698 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:28:51,699 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:28:51,699 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:28:56,706 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:29:06,750 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:29:06,751 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:29:06,754 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:29:11,760 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:29:21,829 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:29:21,829 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:29:21,829 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:29:26,833 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:29:36,878 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:29:36,878 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:29:36,878 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:29:41,884 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:29:51,946 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:29:51,947 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:29:51,948 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:29:56,955 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:30:07,007 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:30:07,007 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:30:07,008 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:30:12,013 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:30:22,069 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:30:22,070 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:30:22,072 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:30:27,078 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:30:37,136 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:30:37,136 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:30:37,137 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:30:42,142 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:30:52,189 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:30:52,190 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:30:52,190 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:30:57,195 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:31:07,255 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:31:07,256 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:31:07,256 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:31:12,262 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:31:22,323 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:31:22,323 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:31:22,324 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:31:27,329 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:31:37,383 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:31:37,384 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:31:37,384 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:31:42,390 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:31:52,447 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:31:52,448 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:31:52,448 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:31:57,454 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:32:07,511 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:32:07,511 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:32:07,512 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:32:12,517 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:32:22,573 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:32:22,574 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:32:22,576 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:32:27,582 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:32:37,643 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:32:37,644 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:32:37,644 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:32:42,650 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:32:52,700 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:32:52,701 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:32:52,701 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:32:57,707 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:33:07,757 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:33:07,758 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:33:07,758 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:33:12,765 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:33:22,816 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:33:22,817 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:33:22,817 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:33:27,824 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:33:37,887 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:33:37,888 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:33:37,888 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:33:42,894 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+2025-10-02 01:33:52,962 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:33:52,963 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:33:52,963 - __main__ - ERROR - ❌ Connection failed. Retrying in 5s...
+2025-10-02 01:33:57,968 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_003
+
+⚠️ Received shutdown signal
+2025-10-02 01:34:04,142 - __main__ - INFO - 🛑 Stopping proxy...
+2025-10-02 01:34:08,026 - __main__ - ERROR - ❌ Connection timeout - cloud server not responding
+2025-10-02 01:34:08,027 - __main__ - ERROR -    Check: 1) Internet connection 2) Server URL 3) Server is running
+2025-10-02 01:34:08,027 - __main__ - INFO - ==================================================
+2025-10-02 01:34:08,030 - __main__ - INFO - 📊 Proxy Statistics:
+2025-10-02 01:34:08,030 - __main__ - INFO -    Messages received: 0
+2025-10-02 01:34:08,030 - __main__ - INFO -    Messages sent: 0
+2025-10-02 01:34:08,031 - __main__ - INFO -    HTTP requests: 0
+2025-10-02 01:34:08,031 - __main__ - INFO -    HTTP errors: 0
+2025-10-02 01:34:08,031 - __main__ - INFO -    Reconnections: 0
+2025-10-02 01:34:08,032 - __main__ - INFO - ==================================================
+2025-10-02 01:34:08,032 - __main__ - INFO - 👋 Payment Gateway Proxy stopped

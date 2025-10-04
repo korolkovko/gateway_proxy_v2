@@ -1,0 +1,24 @@
+# Routing configuration for operation types
+# Maps Header-Operation-Type values to gateway endpoints
+
+routes:
+  payment:
+    url: "http://127.0.0.1:8011/api/v1/dcpayment/payment"
+    timeout: 35
+
+  fiscal:
+    url: "https://unified-mocks-service-production.up.railway.app/mocks/fiscal"
+    timeout: 35
+
+  kds:
+    url: "https://unified-mocks-service-production.up.railway.app/mocks/kds"
+    timeout: 35
+
+  print:
+    url: ""
+    timeout: 35
+
+# Default gateway (optional - if not specified, error will be returned for unknown operation types)
+default:
+  url: ""
+  timeout: 35

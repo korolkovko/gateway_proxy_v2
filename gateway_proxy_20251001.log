@@ -1,0 +1,12 @@
+2025-10-01 21:19:30,716 - __main__ - INFO - 🚀 Payment Gateway Proxy starting...
+2025-10-01 21:19:30,716 - __main__ - INFO -    Kiosk ID: KIOSK_001
+2025-10-01 21:19:30,717 - __main__ - INFO -    Cloud URL: wss://web-production-efee8.up.railway.app/ws/KIOSK_001
+2025-10-01 21:19:30,717 - __main__ - INFO -    Local Gateway: http://localhost:8080
+2025-10-01 21:19:30,717 - __main__ - INFO - 🔌 Connecting to cloud server: wss://web-production-efee8.up.railway.app/ws/KIOSK_001
+2025-10-01 21:19:31,133 - __main__ - INFO - ✅ Connected to cloud server
+2025-10-01 21:19:31,134 - __main__ - INFO - 📥 Received from cloud: connection_status
+2025-10-01 21:19:31,134 - __main__ - INFO - 📡 Connection status: connected
+2025-10-01 21:20:01,134 - __main__ - INFO - 📥 Received from cloud: ping
+2025-10-01 21:20:01,136 - __main__ - INFO - 📤 Sent to cloud: pong
+2025-10-01 21:20:31,134 - __main__ - INFO - 📥 Received from cloud: ping
+2025-10-01 21:20:31,135 - __main__ - INFO - 📤 Sent to cloud: pong
