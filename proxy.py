@@ -15,10 +15,12 @@ import os
 import sys
 import signal
 import yaml
+import time
 from datetime import datetime
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 from logging.handlers import RotatingFileHandler
+from aiohttp import web
 
 # Load environment variables
 load_dotenv()
@@ -40,9 +42,13 @@ class PaymentGatewayProxy:
         self.ws_token = ws_token
         self.websocket: Optional[websockets.WebSocketClientProtocol] = None
         self.running = True
+        self.start_time = time.time()
 
         # HTTP session for gateway requests (reusable, with connection pooling)
         self.http_session: Optional[aiohttp.ClientSession] = None
+
+        # Offline queue for messages when WS is disconnected (max 10)
+        self.offline_queue: asyncio.Queue = asyncio.Queue(maxsize=10)
 
         # Load routing configuration
         self.routing_config = self._load_routing_config(routing_config_path)
@@ -257,8 +263,7 @@ class PaymentGatewayProxy:
                     'message': 'Header-Operation-Type is required'
                 }
                 self.logger.error("❌ Missing Header-Operation-Type")
-                await self.websocket.send(json.dumps(error_response))
-                self.stats['messages_sent'] += 1
+                await self._send_or_queue(json.dumps(error_response))
                 return
 
             # Get route for operation type
@@ -271,8 +276,7 @@ class PaymentGatewayProxy:
                     'message': f'No route configured for operation type: {operation_type}'
                 }
                 self.logger.error(f"❌ Route not found for operation type: {operation_type}")
-                await self.websocket.send(json.dumps(error_response))
-                self.stats['messages_sent'] += 1
+                await self._send_or_queue(json.dumps(error_response))
                 self.stats['errors'] += 1
                 return
 
@@ -293,8 +297,7 @@ class PaymentGatewayProxy:
             )
 
             # Send response back to WS server (as-is)
-            await self.websocket.send(json.dumps(response))
-            self.stats['messages_sent'] += 1
+            await self._send_or_queue(json.dumps(response))
 
             self.logger.info(f"📤 Sent response: {response.get('status', 'unknown')}")
             self.logger.debug(f"Full response: {json.dumps(response, ensure_ascii=False, indent=2)}")
@@ -308,10 +311,7 @@ class PaymentGatewayProxy:
                 'error': 'invalid_json',
                 'message': f'Failed to parse JSON: {str(e)}'
             }
-            try:
-                await self.websocket.send(json.dumps(error_response))
-            except:
-                pass
+            await self._send_or_queue(json.dumps(error_response))
 
         except Exception as e:
             self.logger.error(f"❌ Error handling message: {type(e).__name__}: {e}")
@@ -322,15 +322,58 @@ class PaymentGatewayProxy:
                 'error': 'processing_error',
                 'message': f'Failed to process message: {str(e)}'
             }
+            await self._send_or_queue(json.dumps(error_response))
+
+    async def _send_or_queue(self, message: str):
+        """Send message to WS server or queue if disconnected"""
+        if self.websocket and not self.websocket.closed:
             try:
-                if self.websocket and not self.websocket.closed:
-                    await self.websocket.send(json.dumps(error_response))
-                    self.stats['messages_sent'] += 1
-            except Exception as send_error:
-                self.logger.error(f"❌ Failed to send error response: {send_error}")
+                await self.websocket.send(message)
+                self.stats['messages_sent'] += 1
+                return True
+            except Exception as e:
+                self.logger.error(f"❌ Failed to send: {e}")
+
+        # WS disconnected or send failed - try to queue
+        try:
+            self.offline_queue.put_nowait(message)
+            queue_size = self.offline_queue.qsize()
+            self.logger.warning(f"📦 WS disconnected, queued message ({queue_size}/10)")
+            return False
+        except asyncio.QueueFull:
+            self.logger.error("⚠️ Queue full (10/10), dropping message")
+            self.stats['errors'] += 1
+            return False
+
+    async def _flush_queue(self):
+        """Flush offline queue after reconnection"""
+        if self.offline_queue.empty():
+            return
+
+        initial_size = self.offline_queue.qsize()
+        self.logger.info(f"📤 Flushing {initial_size} queued messages...")
+
+        while not self.offline_queue.empty():
+            try:
+                queued_msg = self.offline_queue.get_nowait()
+                await self.websocket.send(queued_msg)
+                self.stats['messages_sent'] += 1
+                remaining = self.offline_queue.qsize()
+                self.logger.info(f"✅ Sent queued message ({remaining} remaining)")
+            except Exception as e:
+                self.logger.error(f"❌ Failed to send queued message: {e}")
+                # Put it back for retry
+                try:
+                    self.offline_queue.put_nowait(queued_msg)
+                except asyncio.QueueFull:
+                    pass
+                break
 
     async def receive_messages(self):
         """Receive and process messages from WS server"""
+        # First, flush any queued messages from previous disconnect
+        await self._flush_queue()
+
         try:
             async for message in self.websocket:
                 if not self.running:
@@ -360,11 +403,41 @@ class PaymentGatewayProxy:
             if self.running:
                 self.print_stats(periodic=True)
 
+    async def _health_handler(self, request):
+        """HTTP health check endpoint handler"""
+        ws_connected = bool(self.websocket and not self.websocket.closed)
+        status = 'healthy' if ws_connected else 'disconnected'
+
+        return web.json_response({
+            'status': status,
+            'ws_connected': ws_connected,
+            'uptime_seconds': round(time.time() - self.start_time, 2),
+            'stats': self.stats,
+            'queue_size': self.offline_queue.qsize(),
+            'routes_configured': len(self.routes)
+        })
+
+    async def _start_health_server(self):
+        """Start HTTP health check server on localhost:9090"""
+        app = web.Application()
+        app.router.add_get('/health', self._health_handler)
+
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, 'localhost', 9090)
+        await site.start()
+
+        self.logger.info("🏥 Health check server started on http://localhost:9090/health")
+        return runner
+
     async def run(self):
         """Main run loop with automatic reconnection and exponential backoff"""
         self.logger.info("🚀 Payment Gateway Proxy starting...")
         self.logger.info(f"   WS Server: {self.ws_url}")
         self.logger.info(f"   Routing config loaded with {len(self.routes)} routes")
+
+        # Start health check server
+        health_runner = await self._start_health_server()
 
         # Start periodic statistics task
         stats_task = asyncio.create_task(self._periodic_stats())
@@ -417,6 +490,13 @@ class PaymentGatewayProxy:
             await stats_task
         except asyncio.CancelledError:
             pass
+
+        # Stop health check server
+        try:
+            await health_runner.cleanup()
+            self.logger.info("🏥 Health check server stopped")
+        except Exception as e:
+            self.logger.error(f"Error stopping health server: {e}")
 
         # Cleanup
         if self.websocket and not self.websocket.closed:
