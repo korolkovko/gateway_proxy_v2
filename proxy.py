@@ -47,6 +47,10 @@ class PaymentGatewayProxy:
         # Load routing configuration
         self.routing_config = self._load_routing_config(routing_config_path)
 
+        # Cache routes for faster lookup (avoid dict.get on each message)
+        self.routes = self.routing_config.get('routes', {})
+        self.default_route = self.routing_config.get('default')
+
         # Reconnection settings (exponential backoff)
         self.reconnect_delay = 1  # Start with 1 second
         self.reconnect_max_delay = 60  # Max 60 seconds
@@ -134,15 +138,13 @@ class PaymentGatewayProxy:
         Returns:
             Route config dict with 'url' and 'timeout' or None if not found
         """
-        routes = self.routing_config.get('routes', {})
+        # Try to find exact match (using cached routes)
+        if operation_type in self.routes:
+            return self.routes[operation_type]
 
-        # Try to find exact match
-        if operation_type in routes:
-            return routes[operation_type]
-
-        # Try default route
-        if 'default' in self.routing_config:
-            return self.routing_config['default']
+        # Try default route (using cached default)
+        if self.default_route:
+            return self.default_route
 
         # No route found
         return None
@@ -177,7 +179,7 @@ class PaymentGatewayProxy:
         """
         try:
             self.logger.info(f"➡️  Forwarding to gateway: {gateway_url}")
-            self.logger.info(f"   Payload: {json.dumps(message_data, ensure_ascii=False)}")
+            self.logger.debug(f"   Payload: {json.dumps(message_data, ensure_ascii=False, indent=2)}")
 
             # Ensure session exists
             await self._ensure_http_session()
@@ -192,7 +194,7 @@ class PaymentGatewayProxy:
                 if response.status == 200:
                     result = await response.json()
                     self.logger.info(f"✅ Gateway response: HTTP {response.status}")
-                    self.logger.info(f"   Response: {json.dumps(result, ensure_ascii=False)}")
+                    self.logger.debug(f"   Response: {json.dumps(result, ensure_ascii=False, indent=2)}")
                     return result
                 else:
                     error_text = await response.text()
@@ -235,28 +237,17 @@ class PaymentGatewayProxy:
             # Parse JSON from WS server
             data = json.loads(message)
 
-            self.logger.info("=" * 80)
-            self.logger.info(f"📥 RECEIVED from WS server:")
-            self.logger.info(f"   {json.dumps(data, ensure_ascii=False, indent=2)}")
-
-            # Handle ping/pong
-            if data.get('type') == 'ping':
-                pong_response = {'type': 'pong'}
-                await self.websocket.send(json.dumps(pong_response))
-                self.logger.info(f"📤 SENT pong response")
-                self.logger.info("=" * 80)
-                return
-
-            # Count only non-ping messages
-            self.stats['messages_received'] += 1
-
             # Extract routing headers from headers object or top level
             headers = data.get('headers', {})
             kiosk_id = headers.get('header-kiosk-id') or data.get('Header-Kiosk-Id')
             operation_type = headers.get('header-operation-type') or data.get('Header-Operation-Type')
 
-            self.logger.info(f"🏷️  Header-Kiosk-Id: {kiosk_id}")
-            self.logger.info(f"🏷️  Header-Operation-Type: {operation_type}")
+            # Log summary on INFO, full payload on DEBUG
+            self.logger.info(f"📥 Received: {operation_type or 'unknown'} from kiosk {kiosk_id or 'unknown'}")
+            self.logger.debug(f"Full message: {json.dumps(data, ensure_ascii=False, indent=2)}")
+
+            # Count messages
+            self.stats['messages_received'] += 1
 
             # Check if operation type is present
             if not operation_type:
@@ -305,9 +296,8 @@ class PaymentGatewayProxy:
             await self.websocket.send(json.dumps(response))
             self.stats['messages_sent'] += 1
 
-            self.logger.info(f"📤 SENT back to WS server:")
-            self.logger.info(f"   {json.dumps(response, ensure_ascii=False, indent=2)}")
-            self.logger.info("=" * 80)
+            self.logger.info(f"📤 Sent response: {response.get('status', 'unknown')}")
+            self.logger.debug(f"Full response: {json.dumps(response, ensure_ascii=False, indent=2)}")
 
         except json.JSONDecodeError as e:
             self.logger.error(f"❌ Invalid JSON from server: {e}")
@@ -352,21 +342,32 @@ class PaymentGatewayProxy:
         except Exception as e:
             self.logger.error(f"❌ Error receiving messages: {e}")
 
-    def print_stats(self):
+    def print_stats(self, periodic: bool = False):
         """Print statistics"""
+        title = "⏰ Hourly Statistics" if periodic else "📊 Final Statistics"
         self.logger.info("=" * 60)
-        self.logger.info("📊 Proxy Statistics:")
+        self.logger.info(f"{title}:")
         self.logger.info(f"   Messages received: {self.stats['messages_received']}")
         self.logger.info(f"   Messages sent: {self.stats['messages_sent']}")
         self.logger.info(f"   Errors: {self.stats['errors']}")
         self.logger.info(f"   Reconnections: {self.stats['reconnections']}")
         self.logger.info("=" * 60)
 
+    async def _periodic_stats(self):
+        """Print statistics every hour"""
+        while self.running:
+            await asyncio.sleep(3600)  # 1 hour
+            if self.running:
+                self.print_stats(periodic=True)
+
     async def run(self):
         """Main run loop with automatic reconnection and exponential backoff"""
         self.logger.info("🚀 Payment Gateway Proxy starting...")
         self.logger.info(f"   WS Server: {self.ws_url}")
-        self.logger.info(f"   Routing config loaded with {len(self.routing_config.get('routes', {}))} routes")
+        self.logger.info(f"   Routing config loaded with {len(self.routes)} routes")
+
+        # Start periodic statistics task
+        stats_task = asyncio.create_task(self._periodic_stats())
 
         while self.running:
             try:
@@ -410,6 +411,13 @@ class PaymentGatewayProxy:
                 if self.running:
                     await asyncio.sleep(self.reconnect_delay)
 
+        # Cancel periodic stats task
+        stats_task.cancel()
+        try:
+            await stats_task
+        except asyncio.CancelledError:
+            pass
+
         # Cleanup
         if self.websocket and not self.websocket.closed:
             try:
@@ -424,7 +432,7 @@ class PaymentGatewayProxy:
             except Exception as e:
                 self.logger.error(f"Error closing HTTP session: {e}")
 
-        self.print_stats()
+        self.print_stats(periodic=False)
         self.logger.info("👋 Payment Gateway Proxy stopped")
 
     def stop(self):
